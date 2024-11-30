@@ -1,5 +1,7 @@
 # Imports
 import sys
+
+from client import Client
 sys.dont_write_bytecode = True
 import pickle
 import os, time, socket, struct
@@ -40,6 +42,8 @@ class Env:
         self.available_addresses.append(address)
 
     def sendMessage(self, dst, msg):
+        # print('dst:', dst)
+        # print('self.proc_addresses:', self.proc_addresses)
         if dst in self.proc_addresses:
             host, port = self.proc_addresses[dst]
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -48,19 +52,22 @@ class Env:
             data = pickle.dumps(msg, protocol=pickle.HIGHEST_PROTOCOL)
             s.sendall(struct.pack('!I', len(data)) + data)
         except Exception as e:
-            print("Failed to send message:", e)
+            print('dst:', dst)
+            raise e
         finally:
             s.close()
 
     def addProc(self, proc):
+        # print("Adding process:", proc.id)
         self.procs[proc.id] = proc
         self.proc_addresses[proc.id] = (proc.host, proc.port)
         proc.start()
 
     def removeProc(self, pid):
-        if pid in self.procs:
-            del self.procs[pid]
-            del self.proc_addresses[pid]
+        # if pid in self.procs:
+        #     del self.procs[pid]
+        #     del self.proc_addresses[pid]
+        pass
 
     def _graceexit(self, exitcode=0):
         sys.stdout.flush()
@@ -85,6 +92,28 @@ class Env:
             host, port = self.get_network_address()
             Leader(self, pid, self.config, host, port)
             self.config.leaders.append(pid)
+        
+        return self.config
+    
+    def create_config(self, nreplicas, nacceptors, nleaders):
+        print("Using default configuration\n\n")
+        for i in range(nreplicas):
+            pid = f"replica {i}"
+            host, port = self.get_network_address()
+            Replica(self, pid, self.config, host, port)
+            self.config.replicas.append(pid)
+        for i in range(nacceptors):
+            pid = f"acceptor {self.c}.{i}"
+            host, port = self.get_network_address()
+            Acceptor(self, pid, host, port)
+            self.config.acceptors.append(pid)
+        for i in range(nleaders):
+            pid = f"leader {self.c}.{i}"
+            host, port = self.get_network_address()
+            Leader(self, pid, self.config, host, port)
+            self.config.leaders.append(pid)
+        
+        return self.config
   
     # Create custom configuration
     def create_custom(self):
@@ -122,7 +151,37 @@ class Env:
             self._graceexit()
         finally:
             file.close()
+
+    def create_request_new_account(self, client_id, account_id):
+        pid = client_id
+        input_text = f"newaccount {client_id} {account_id + 1}"
+        cmd = Command(pid, 0, input_text + f"#{self.c}.{self.perf}")
+        if self.dist:
+            for key, val in self.proc_addresses.items():
+                if key.startswith("replica"):
+                    self.sendMessage(val, RequestMessage(pid, cmd))
+        else:
+            for r in self.config.replicas:
+                self.sendMessage(r, RequestMessage(pid, cmd))
+
+    def create_client(self, pid, duration, nrequests):
+        host, port = self.get_network_address()
+        self.create_client_in_Bank(pid)
+        client = Client(self, pid, host, port, duration, nrequests)
+        return client
     
+    def create_client_in_Bank(self, client_id):
+        input_text = f"newclient cl {client_id}"
+        pid = client_id
+        cmd = Command(pid, 0, input_text + f"#{self.c}.{self.perf}")
+        if self.dist:
+            for key, val in self.proc_addresses.items():
+                if key.startswith("replica"):
+                    self.sendMessage(val, RequestMessage(pid, cmd))
+        else:
+            for r in self.config.replicas:
+                self.sendMessage(r, RequestMessage(pid, cmd))
+
     # Run environment
     def run(self):
         print("\n")

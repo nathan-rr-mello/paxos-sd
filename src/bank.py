@@ -24,7 +24,7 @@ class bank:
     
     def createAccount_2(self, client_id, account_id):
         if client_id not in self.clients:
-            self.print_and_log("Client does not exist")
+            self.print_and_log("Client does not exist: " + client_id)
         elif account_id in self.accounts:
             self.print_and_log("Account already exists")
         else:

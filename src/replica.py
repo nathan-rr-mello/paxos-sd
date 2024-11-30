@@ -2,7 +2,7 @@ import sys
 sys.dont_write_bytecode = True
 from process import Process
 from bank import bank
-from message import ProposeMessage,DecisionMessage,RequestMessage
+from message import ProposeMessage,DecisionMessage,RequestMessage, ResponseMessage
 from utils import *
 
 class Replica(Process):
@@ -14,6 +14,7 @@ class Replica(Process):
         self.requests = []
         self.config = config
         self.BankStatus = bank(id.replace(" ", "_"))
+        self.command_cients = {}
         self.env.addProc(self)
 
     def propose(self):
@@ -44,10 +45,13 @@ class Replica(Process):
         if parts[0] == "newclient":
             self.BankStatus.createClient(parts[1], parts[2])
         elif parts[0] == "newaccount":
+            print("Account creation: ", parts)
             if len(parts) == 3:
                 self.BankStatus.createAccount_2(parts[1], parts[2])
             else:
                 self.BankStatus.createAccount(parts[1])
+            src = self.command_cients[cmd]
+            self.sendMessage(src, ResponseMessage(self.id, self.slot_out, cmd))
         elif parts[0] == "addaccount":
             self.BankStatus.addAccount(parts[1], parts[2])
         elif parts[0] == "balance":
@@ -75,6 +79,7 @@ class Replica(Process):
                 msg = self.getNextMessage()
                 if isinstance(msg, RequestMessage):
                     self.requests.append(msg.command)
+                    self.command_cients[msg.command] = msg.src
                 elif isinstance(msg, DecisionMessage):
                     self.decisions[msg.slot_number] = msg.command
                     while self.slot_out in self.decisions:
