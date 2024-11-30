@@ -154,7 +154,7 @@ class Env:
 
     def create_request_new_account(self, client_id, account_id):
         pid = client_id
-        input_text = f"newaccount {client_id} {account_id + 1}"
+        input_text = f"newaccount {client_id} {account_id}"
         cmd = Command(pid, 0, input_text + f"#{self.c}.{self.perf}")
         if self.dist:
             for key, val in self.proc_addresses.items():

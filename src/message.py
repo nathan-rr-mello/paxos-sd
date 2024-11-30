@@ -7,7 +7,7 @@ class Message:
     """
     def __init__(self, src):
         self.src = src
-        self.debug = False
+        self.debug = True
 
     def __str__(self):
         return str(self.__dict__)
@@ -24,7 +24,7 @@ class P1aMessage(Message):
     def __init__(self, src, ballot_number):
         Message.__init__(self, src)
         self.ballot_number = ballot_number
-        self.print_message("P1aMessage: %s" % (self.__dict__))
+        # self.print_message("P1aMessage: %s" % (self.__dict__))
 
 class P1bMessage(Message):
     """
@@ -35,7 +35,7 @@ class P1bMessage(Message):
         Message.__init__(self, src)
         self.ballot_number = ballot_number
         self.accepted = accepted
-        self.print_message("P1bMessage: %s" % (self.__dict__))
+        # self.print_message("P1bMessage: %s" % (self.__dict__))
 
 class P2aMessage(Message):
     """
@@ -68,7 +68,7 @@ class PreemptedMessage(Message):
     def __init__(self, src, ballot_number):
         Message.__init__(self, src)
         self.ballot_number = ballot_number
-        self.print_message("PreemptedMessage: %s" % (self.__dict__))
+        # self.print_message("PreemptedMessage: %s" % (self.__dict__))
 
 class AdoptedMessage(Message):
     """

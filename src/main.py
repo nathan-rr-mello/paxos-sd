@@ -7,10 +7,10 @@ from client import Client
 NACCEPTORS = 3
 NREPLICAS = 2
 NLEADERS = 2
-NREQUESTS = 5
+NREQUESTS = 2
 NCONFIGS = 3
 
-def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50, duration=60):
+def run_experiments(env, max_failures=3, max_clients=200, step=50, duration=60):
     results = {}
     env.create_config(NREPLICAS, NACCEPTORS, NLEADERS)
 
@@ -68,8 +68,7 @@ def write_results(results):
     
 def main():
     env = Env(1)
-    initialconfig = Config([], [], [])
-    experiment_results = run_experiments(env, initialconfig, max_failures=1, max_clients=5, step=1, duration=25)
+    experiment_results = run_experiments(env, max_failures=1, max_clients=30, step=30, duration=100)
     print('Experiment results')
     write_results(experiment_results)
     # plot_results(experiment_results)

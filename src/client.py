@@ -32,7 +32,7 @@ class Client(Process):
             while True:
                 t1 = time.time()  # Timestamp antes de enviar requisição
 
-                self.env.create_request_new_account(self.id, self.count)
+                self.env.create_request_new_account(self.id, f"{self.id}:{self.count}")
                 msg = self.getNextMessage()
                 print(f"Client {self.id} received message: {msg}")
 
@@ -53,7 +53,7 @@ class Client(Process):
         throughput = self.count / (t4 - t0)
         average_latency = sum(self.latencies) / len(self.latencies) if self.latencies else 0
 
-        print(f"Cliente finalizado. Vazão: {throughput:.2f} req/s, Média de latência: {average_latency:.6f} s.")
+        print(f"Cliente finalizado. ID: {self.id}, Vazão: {throughput:.2f} req/s, Média de latência: {average_latency:.6f} s.")
         print(f"Total de requisições enviadas: {self.count}")
         print(f"Log gravado em: {log_file}")
         self.result = (throughput, average_latency)
